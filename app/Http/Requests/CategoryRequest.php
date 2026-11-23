@@ -3,53 +3,35 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    public function authorize(): bool
     {
-        // only allow updates if the user is logged in
         return backpack_auth()->check();
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules()
+    public function rules(): array
     {
+        $categoryId = $this->route('id') ?? $this->route('category');
+
         return [
-            // 'name' => 'required|min:5|max:255'
+            'name' => ['required', 'string', 'min:2', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('categories', 'slug')->ignore($categoryId)],
+            'description' => ['nullable', 'string', 'max:10000'],
         ];
     }
 
-    /**
-     * Get the validation attributes that apply to the request.
-     *
-     * @return array
-     */
-    public function attributes()
+    public function attributes(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
-    /**
-     * Get the validation messages that apply to the request.
-     *
-     * @return array
-     */
-    public function messages()
+    public function messages(): array
     {
         return [
-            //
+            'slug.alpha_dash' => 'The slug may contain letters, numbers, dashes, and underscores only.',
         ];
     }
 }

@@ -39,11 +39,25 @@ class ProductCrudController extends CrudController
      */
     protected function setupListOperation()
     {
+        CRUD::setOperationSetting('exportButtons', true);
+        CRUD::setOperationSetting('showExportButton', true);
         CRUD::setFromDb();
 
         // Remove auto-generated columns
+        $this->crud->removeColumn('status');
         $this->crud->removeColumn('category_id');
         $this->crud->removeColumn('image');
+
+        // Status
+        CRUD::column([
+            'name'  => 'status',
+            'label' => 'Status',
+            'type'  => 'boolean',
+            'options' => [
+                0 => 'Inactive',
+                1 => 'Active',
+            ],
+        ]);
 
         // Category column
         CRUD::column([
@@ -84,7 +98,8 @@ class ProductCrudController extends CrudController
             'entity'    => 'category',
             'model'     => 'App\Models\Category',
             'attribute' => 'name',
-            'allows_null' => true,
+            'allows_null' => false,
+            'validation' => ['required'],
         ]);
 
         CRUD::field('image')
@@ -141,7 +156,16 @@ class ProductCrudController extends CrudController
             'width'  => '150px',
         ]);
 
-        CRUD::column('status');
+        // Status
+        CRUD::column([
+            'name'  => 'status',
+            'label' => 'Status',
+            'type'  => 'boolean',
+            'options' => [
+                0 => 'Inactive',
+                1 => 'Active',
+            ],
+        ]);
 
         CRUD::column('created_at');
     }
