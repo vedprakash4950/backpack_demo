@@ -17,6 +17,16 @@ Route::group([
     'namespace' => 'App\Http\Controllers\Admin',
 ], function () { // custom admin routes
     Route::crud('category', 'CategoryCrudController');
+    Route::get('product/export/csv', [
+        'as' => 'backpack.product.export.csv',
+        'uses' => \App\Http\Controllers\Admin\ProductCrudController::class . '@exportCsv',
+        'operation' => 'list',
+    ]);
+    Route::get('product/export/excel', [
+        'as' => 'backpack.product.export.excel',
+        'uses' => \App\Http\Controllers\Admin\ProductCrudController::class . '@exportExcel',
+        'operation' => 'list',
+    ]);
     Route::crud('product', 'ProductCrudController');
 }); // this should be the absolute last line of this file
 

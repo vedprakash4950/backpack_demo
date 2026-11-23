@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\ProductRequest;
+use App\Models\Product;
+use App\Exports\ProductsExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 
@@ -39,8 +42,9 @@ class ProductCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::setOperationSetting('exportButtons', true);
-        CRUD::setOperationSetting('showExportButton', true);
+        CRUD::button('export_products')
+            ->stack('top')
+            ->view('vendor.backpack.crud.buttons.export_products');
         CRUD::setFromDb();
 
         // Remove auto-generated columns
@@ -78,6 +82,61 @@ class ProductCrudController extends CrudController
             'height' => '60px',
             'width'  => '60px',
         ]);
+    }
+
+    public function exportCsv()
+    {
+        $this->crud->hasAccessOrFail('list');
+
+        return Excel::download(
+            new ProductsExport($this->filteredProductQuery()),
+            'products.csv',
+            \Maatwebsite\Excel\Excel::CSV
+        );
+    }
+
+    public function exportExcel()
+    {
+        $this->crud->hasAccessOrFail('list');
+
+        return Excel::download(
+            new ProductsExport($this->filteredProductQuery()),
+            'products.xlsx'
+        );
+    }
+
+    private function filteredProductQuery()
+    {
+        $this->crud->applyUnappliedFilters();
+
+        $search = request()->input('search');
+        $searchTerm = is_array($search)
+            ? ($search['value'] ?? null)
+            : ($search ?? request()->query('q'));
+
+        $query = $this->crud->getModelWithCrudPanelQuery()
+            ->with('category');
+
+        if (is_string($searchTerm) && trim($searchTerm) !== '') {
+            $term = '%' . trim($searchTerm) . '%';
+
+            $query->where(function ($query) use ($term) {
+                $query->where('products.name', 'like', $term)
+                    ->orWhere('products.slug', 'like', $term)
+                    ->orWhere('products.description', 'like', $term)
+                    ->orWhere('products.price', 'like', $term)
+                    ->orWhere('products.stock', 'like', $term)
+                    ->orWhere('products.status', 'like', $term)
+                    ->orWhere('products.image', 'like', $term)
+                    ->orWhere('products.created_at', 'like', $term)
+                    ->orWhere('products.updated_at', 'like', $term)
+                    ->orWhereHas('category', function ($categoryQuery) use ($term) {
+                        $categoryQuery->where('name', 'like', $term);
+                    });
+            });
+        }
+
+        return $query->orderBy('products.id');
     }
 
     /**
