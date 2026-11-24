@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\ProductRequest;
-use App\Models\Product;
+use App\Models\Category;
 use App\Exports\ProductsExport;
+use App\Models\Product;
+use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Facades\Excel;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
@@ -44,6 +46,7 @@ class ProductCrudController extends CrudController
     {
         CRUD::button('export_products')
             ->stack('top')
+            ->meta(['categories' => Category::query()->orderBy('name')->get()])
             ->view('vendor.backpack.crud.buttons.export_products');
         CRUD::setFromDb();
 
@@ -82,6 +85,30 @@ class ProductCrudController extends CrudController
             'height' => '60px',
             'width'  => '60px',
         ]);
+
+        $this->crud->query = $this->applyProductFilters($this->crud->query);
+    }
+
+    private function applyProductFilters(Builder $query): Builder
+    {
+        $status = request()->query('status');
+        if (in_array($status, ['0', '1', 0, 1], true)) {
+            $query->where('products.status', (int) $status);
+        }
+
+        $categoryId = request()->query('category_id');
+        if (is_scalar($categoryId) && ctype_digit((string) $categoryId)) {
+            $query->where('products.category_id', (int) $categoryId);
+        }
+
+        foreach (['stock_min' => '>=', 'stock_max' => '<='] as $parameter => $operator) {
+            $value = request()->query($parameter);
+            if (is_scalar($value) && ctype_digit((string) $value)) {
+                $query->where('products.stock', $operator, (int) $value);
+            }
+        }
+
+        return $query;
     }
 
     public function exportCsv()
@@ -107,14 +134,12 @@ class ProductCrudController extends CrudController
 
     private function filteredProductQuery()
     {
-        $this->crud->applyUnappliedFilters();
-
         $search = request()->input('search');
         $searchTerm = is_array($search)
             ? ($search['value'] ?? null)
             : ($search ?? request()->query('q'));
 
-        $query = $this->crud->getModelWithCrudPanelQuery()
+        $query = $this->applyProductFilters(Product::query())
             ->with('category');
 
         if (is_string($searchTerm) && trim($searchTerm) !== '') {
