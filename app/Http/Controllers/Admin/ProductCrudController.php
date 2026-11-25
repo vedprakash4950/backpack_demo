@@ -193,6 +193,13 @@ class ProductCrudController extends CrudController
                 'path' => 'products',
             ]);
 
+        CRUD::field([
+            'name' => 'image_preview',
+            'type' => 'view',
+            'view' => 'vendor.backpack.crud.fields.product_image_preview',
+            'wrapper' => ['class' => 'form-group col-sm-12'],
+        ]);
+
         /**
          * Fields can be defined using the fluent syntax:
          * - CRUD::field('price')->type('number');
