@@ -11,6 +11,10 @@
     }
 @endphp
 
+@push('crud_fields_styles')
+    @basset('https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css')
+@endpush
+
 <div id="product-image-preview" class="mb-3" @if (!$currentImageUrl) hidden @endif>
     <label class="form-label">Image preview</label>
     <div>
@@ -24,8 +28,13 @@
 </div>
 
 @push('crud_fields_scripts')
+@basset('https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js')
 <script>
     (function () {
+        if (window.jQuery && jQuery.fn.select2) {
+            jQuery('.product-searchable-select').select2({ width: '100%' });
+        }
+
         const preview = document.getElementById('product-image-preview');
         const image = document.getElementById('product-image-preview-img');
         if (!preview || !image) return;

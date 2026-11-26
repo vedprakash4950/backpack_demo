@@ -183,6 +183,7 @@ class ProductCrudController extends CrudController
             'model'     => 'App\Models\Category',
             'attribute' => 'name',
             'allows_null' => false,
+            'attributes' => ['class' => 'form-control form-select product-searchable-select'],
             'validation' => ['required'],
         ]);
 

@@ -10,7 +10,7 @@
 
     <div>
         <label for="product-filter-category" class="form-label mb-1">Category</label>
-        <select id="product-filter-category" name="category_id" class="form-select form-select-sm">
+        <select id="product-filter-category" name="category_id" class="form-select form-select-sm product-searchable-select">
             <option value="">All categories</option>
             @foreach ($button->meta['categories'] as $category)
                 <option value="{{ $category->id }}" @selected((string) request('category_id') === (string) $category->id)>
@@ -40,7 +40,17 @@
     </a>
 </form>
 
+@push('after_styles')
+    @basset('https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css')
+@endpush
+
 @push('after_scripts')
+@basset('https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js')
+<script>
+    if (window.jQuery && jQuery.fn.select2) {
+        jQuery('.product-searchable-select').select2({ width: 'style' });
+    }
+</script>
 <script>
     document.addEventListener('click', function (event) {
         const link = event.target.closest('.js-product-export');
